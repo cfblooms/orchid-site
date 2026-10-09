@@ -28,19 +28,10 @@
   </header>
 
   <!-- 主要內容區 -->
-  <main class="max-w-6xl mx-auto px-4 py-6" id="app">
-    <!-- 分類篩選按鈕 -->
-    <div class="flex flex-wrap gap-2 mb-6">
-      <button onclick="filterCategory('全部')" class="cat-btn px-4 py-1.5 rounded-full text-sm font-medium bg-stone-900 text-white transition">全部展示</button>
-      <button onclick="filterCategory('開幕誌慶')" class="cat-btn px-4 py-1.5 rounded-full text-sm font-medium bg-white text-stone-600 border border-stone-300 hover:bg-stone-100 transition">開幕誌慶</button>
-      <button onclick="filterCategory('升遷榮調')" class="cat-btn px-4 py-1.5 rounded-full text-sm font-medium bg-white text-stone-600 border border-stone-300 hover:bg-stone-100 transition">升遷榮調</button>
-      <button onclick="filterCategory('居家辦公')" class="cat-btn px-4 py-1.5 rounded-full text-sm font-medium bg-white text-stone-600 border border-stone-300 hover:bg-stone-100 transition">居家辦公</button>
-      <button onclick="filterCategory('追思弔唁')" class="cat-btn px-4 py-1.5 rounded-full text-sm font-medium bg-white text-stone-600 border border-stone-300 hover:bg-stone-100 transition">追思弔唁</button>
-    </div>
-
+  <main class="max-w-6xl mx-auto px-4 py-6">
     <!-- 瀑布流圖片網格 -->
     <div id="gallery" class="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
-      <!-- 圖片卡片將由下方 JavaScript 動態產生 -->
+      <div id="loading" class="text-stone-400 py-12 text-center col-span-full">載入作品中...</div>
     </div>
   </main>
 
@@ -51,87 +42,66 @@
     </a>
   </div>
 
- <script>
-    // 蘭花相片清單
-    const orchids = [
-      {
-        id: "A01",
-        title: "經典大白花 5株組",
-        category: "開幕誌慶",
-        imgUrl: "https://res.cloudinary.com/mridz5af/image/upload/v1791519496/A01.jpg"
-      },
-      {
-        id: "A02",
-        title: "喜氣粉紅 3株組",
-        category: "升遷榮調",
-        imgUrl: "https://res.cloudinary.com/mridz5af/image/upload/v1791519496/A02.jpg"
-      },
-      {
-        id: "A03",
-        title: "優雅黃花 3株組",
-        category: "居家辦公",
-        imgUrl: "https://res.cloudinary.com/mridz5af/image/upload/v1791519496/A03.jpg"
-      }
-    ];
+  <script>
+    const CLOUD_NAME = "mridz5af";
+    const TAG_NAME = "gallery"; // 只要有貼上 gallery 標籤的照片都會自動秀出來
 
-    let currentFilter = '全部';
-
-    function renderGallery() {
+    async function fetchOrchids() {
       const container = document.getElementById('gallery');
-      container.innerHTML = '';
+      try {
+        // 向 Cloudinary 自動抓取貼有 gallery 標籤的照片列表
+        const res = await fetch(`https://res.cloudinary.com/${CLOUD_NAME}/image/list/${TAG_NAME}.json`);
+        const data = await res.json();
+        
+        container.innerHTML = '';
 
-      const filtered = currentFilter === '全部' 
-        ? orchids 
-        : orchids.filter(item => item.category === currentFilter);
-
-      filtered.forEach(item => {
-        // 直接使用每筆資料定義好的 imgUrl，並加入自動優化參數
-        const displayUrl = item.imgUrl.replace('/upload/', '/upload/f_auto,q_auto,w_800/');
-
-        const card = document.createElement('div');
-        card.className = "break-inside-avoid bg-white rounded-2xl overflow-hidden shadow-sm border border-stone-200 hover:shadow-md transition duration-300 flex flex-col mb-4";
-        card.innerHTML = `
-          <div class="relative bg-stone-100 aspect-auto">
-            <img src="${displayUrl}" alt="${item.title}" loading="lazy" class="w-full h-auto object-cover block">
-            <span class="absolute top-3 left-3 bg-stone-900/80 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-md tracking-wider">
-              編號 ${item.id}
-            </span>
-          </div>
-          <div class="p-4 flex flex-col justify-between flex-grow">
-            <div>
-              <div class="text-xs font-medium text-emerald-800 bg-emerald-50 inline-block px-2 py-0.5 rounded-full mb-1.5">
-                ${item.category}
-              </div>
-              <h3 class="font-bold text-stone-800 text-base mb-3">${item.title}</h3>
-            </div>
-            <div class="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-stone-100">
-              <a href="tel:0958-179-725" class="text-center py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold transition">
-                📞 撥打電話
-              </a>
-              <a href="https://lin.ee/SwQOPJk" target="_blank" class="text-center py-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition">
-                💬 LINE 訂購
-              </a>
-            </div>
-          </div>
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    function filterCategory(cat) {
-      currentFilter = cat;
-      document.querySelectorAll('.cat-btn').forEach(btn => {
-        if (btn.innerText === (cat === '全部' ? '全部展示' : cat)) {
-          btn.className = "cat-btn px-4 py-1.5 rounded-full text-sm font-medium bg-stone-900 text-white transition";
-        } else {
-          btn.className = "cat-btn px-4 py-1.5 rounded-full text-sm font-medium bg-white text-stone-600 border border-stone-300 hover:bg-stone-100 transition";
+        if (!data.resources || data.resources.length === 0) {
+          container.innerHTML = '<div class="text-stone-400 py-12 text-center col-span-full">目前尚無標籤為 gallery 的照片</div>';
+          return;
         }
-      });
-      renderGallery();
+
+        // 依上傳時間由新到舊排序
+        data.resources.forEach(item => {
+          // 自動生成最佳化尺寸與 WebP 格式網址
+          const imgUrl = `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto,w_800/v${item.version}/${item.public_id}.${item.format}`;
+          
+          // 自動將檔案名稱作為作品編號（例如 A01）
+          const code = item.public_id.split('/').pop();
+
+          const card = document.createElement('div');
+          card.className = "break-inside-avoid bg-white rounded-2xl overflow-hidden shadow-sm border border-stone-200 hover:shadow-md transition duration-300 flex flex-col mb-4";
+          card.innerHTML = `
+            <div class="relative bg-stone-100 aspect-auto">
+              <img src="${imgUrl}" alt="作品 ${code}" loading="lazy" class="w-full h-auto object-cover block">
+              <span class="absolute top-3 left-3 bg-stone-900/80 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-md tracking-wider">
+                編號 ${code}
+              </span>
+            </div>
+            <div class="p-4 flex flex-col justify-between flex-grow">
+              <div class="mb-3">
+                <h3 class="font-bold text-stone-800 text-base">蘭花精選盆栽 (${code})</h3>
+                <p class="text-xs text-stone-400 mt-0.5">歡迎洽詢規格與庫存</p>
+              </div>
+              <div class="grid grid-cols-2 gap-2 pt-2 border-t border-stone-100">
+                <a href="tel:0958-179-725" class="text-center py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold transition">
+                  📞 撥打電話
+                </a>
+                <a href="https://lin.ee/SwQOPJk" target="_blank" class="text-center py-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition">
+                  💬 LINE 訂購
+                </a>
+              </div>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = '<div class="text-rose-500 py-12 text-center col-span-full">照片載入失敗，請確認 Cloudinary Security 的 Resource list 已取消勾選</div>';
+      }
     }
 
-    // 初次載入
-    renderGallery();
+    fetchOrchids();
   </script>
 </body>
 </html>
