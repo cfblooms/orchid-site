@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>蘭花精選展示型錄</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-stone-50 text-stone-800 antialiased min-h-screen pb-24">
+
+  <!-- 頂部標題區 -->
+  <header class="bg-white border-b border-stone-200 sticky top-0 z-30 py-4 px-4 shadow-sm">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-stone-900">蘭花精選盆栽目錄</h1>
+        <p class="text-xs text-stone-500 mt-0.5">歡迎記下作品編號，直接致電或加 LINE 洽詢訂購</p>
+      </div>
+      <!-- 快速聯絡按鈕 -->
+      <div class="flex gap-2">
+        <a href="tel:0958-179-725" class="flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-full text-sm font-medium shadow transition">
+          <span>📞 電話訂購</span>
+        </a>
+        <a href="https://lin.ee/SwQOPJk" target="_blank" class="flex items-center gap-1.5 bg-[#06C755] hover:opacity-90 text-white px-4 py-2 rounded-full text-sm font-medium shadow transition">
+          <span>💬 LINE 諮詢</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主要內容區 -->
+  <main class="max-w-6xl mx-auto px-4 py-6" id="app">
+    <!-- 分類篩選按鈕 -->
+    <div class="flex flex-wrap gap-2 mb-6">
+      <button onclick="filterCategory('全部')" class="cat-btn px-4 py-1.5 rounded-full text-sm font-medium bg-stone-900 text-white transition">全部展示</button>
+      <button onclick="filterCategory('開幕誌慶')" class="cat-btn px-4 py-1.5 rounded-full text-sm font-medium bg-white text-stone-600 border border-stone-300 hover:bg-stone-100 transition">開幕誌慶</button>
+      <button onclick="filterCategory('升遷榮調')" class="cat-btn px-4 py-1.5 rounded-full text-sm font-medium bg-white text-stone-600 border border-stone-300 hover:bg-stone-100 transition">升遷榮調</button>
+      <button onclick="filterCategory('居家辦公')" class="cat-btn px-4 py-1.5 rounded-full text-sm font-medium bg-white text-stone-600 border border-stone-300 hover:bg-stone-100 transition">居家辦公</button>
+      <button onclick="filterCategory('追思弔唁')" class="cat-btn px-4 py-1.5 rounded-full text-sm font-medium bg-white text-stone-600 border border-stone-300 hover:bg-stone-100 transition">追思弔唁</button>
+    </div>
+
+    <!-- 瀑布流圖片網格 -->
+    <div id="gallery" class="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
+      <!-- 圖片卡片將由下方 JavaScript 動態產生 -->
+    </div>
+  </main>
+
+  <!-- 浮動電話按鈕（手機版右下角固定） -->
+  <div class="fixed bottom-6 right-6 z-40 sm:hidden flex flex-col gap-3">
+    <a href="tel:0958-179-725" class="w-14 h-14 bg-emerald-700 text-white rounded-full flex items-center justify-center shadow-lg text-2xl active:scale-95 transition">
+      📞
+    </a>
+  </div>
+
+ <script>
+    // 蘭花相片清單
+    const orchids = [
+      {
+        id: "A01",
+        title: "經典大白花 5株組",
+        category: "開幕誌慶",
+        imgUrl: "https://res.cloudinary.com/mridz5af/image/upload/v1791519496/A01.jpg"
+      },
+      {
+        id: "A02",
+        title: "喜氣粉紅 3株組",
+        category: "升遷榮調",
+        imgUrl: "https://res.cloudinary.com/mridz5af/image/upload/v1791519496/A02.jpg"
+      },
+      {
+        id: "A03",
+        title: "優雅黃花 3株組",
+        category: "居家辦公",
+        imgUrl: "https://res.cloudinary.com/mridz5af/image/upload/v1791519496/A03.jpg"
+      }
+    ];
+
+    let currentFilter = '全部';
+
+    function renderGallery() {
+      const container = document.getElementById('gallery');
+      container.innerHTML = '';
+
+      const filtered = currentFilter === '全部' 
+        ? orchids 
+        : orchids.filter(item => item.category === currentFilter);
+
+      filtered.forEach(item => {
+        // 直接使用每筆資料定義好的 imgUrl，並加入自動優化參數
+        const displayUrl = item.imgUrl.replace('/upload/', '/upload/f_auto,q_auto,w_800/');
+
+        const card = document.createElement('div');
+        card.className = "break-inside-avoid bg-white rounded-2xl overflow-hidden shadow-sm border border-stone-200 hover:shadow-md transition duration-300 flex flex-col mb-4";
+        card.innerHTML = `
+          <div class="relative bg-stone-100 aspect-auto">
+            <img src="${displayUrl}" alt="${item.title}" loading="lazy" class="w-full h-auto object-cover block">
+            <span class="absolute top-3 left-3 bg-stone-900/80 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-md tracking-wider">
+              編號 ${item.id}
+            </span>
+          </div>
+          <div class="p-4 flex flex-col justify-between flex-grow">
+            <div>
+              <div class="text-xs font-medium text-emerald-800 bg-emerald-50 inline-block px-2 py-0.5 rounded-full mb-1.5">
+                ${item.category}
+              </div>
+              <h3 class="font-bold text-stone-800 text-base mb-3">${item.title}</h3>
+            </div>
+            <div class="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-stone-100">
+              <a href="tel:0958-179-725" class="text-center py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold transition">
+                📞 撥打電話
+              </a>
+              <a href="https://lin.ee/SwQOPJk" target="_blank" class="text-center py-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition">
+                💬 LINE 訂購
+              </a>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function filterCategory(cat) {
+      currentFilter = cat;
+      document.querySelectorAll('.cat-btn').forEach(btn => {
+        if (btn.innerText === (cat === '全部' ? '全部展示' : cat)) {
+          btn.className = "cat-btn px-4 py-1.5 rounded-full text-sm font-medium bg-stone-900 text-white transition";
+        } else {
+          btn.className = "cat-btn px-4 py-1.5 rounded-full text-sm font-medium bg-white text-stone-600 border border-stone-300 hover:bg-stone-100 transition";
+        }
+      });
+      renderGallery();
+    }
+
+    // 初次載入
+    renderGallery();
+  </script>
+</body>
+</html>
