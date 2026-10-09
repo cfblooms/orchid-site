@@ -10,7 +10,7 @@
 
   <!-- 頂部標題區 -->
   <header class="bg-white border-b border-stone-200 sticky top-0 z-30 py-4 px-4 shadow-sm">
-    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       <div>
         <h1 class="text-2xl font-bold tracking-tight text-stone-900">蘭花精選盆栽目錄</h1>
         <p class="text-xs text-stone-500 mt-0.5">記下作品編號，即可直接撥打電話或透過 LINE 洽詢訂購</p>
@@ -28,7 +28,7 @@
   </header>
 
   <!-- 主要內容區 -->
-  <main class="max-w-6xl mx-auto px-4 py-6">
+  <main class="max-w-7xl mx-auto px-4 py-6">
     <!-- 分類篩選按鈕 -->
     <div class="flex flex-wrap gap-2 mb-6">
       <button onclick="filterCategory('全部')" class="cat-btn px-4 py-1.5 rounded-full text-sm font-medium bg-stone-900 text-white transition">全部展示</button>
@@ -38,8 +38,8 @@
       <button onclick="filterCategory('追思弔唁')" class="cat-btn px-4 py-1.5 rounded-full text-sm font-medium bg-white text-stone-600 border border-stone-300 hover:bg-stone-100 transition">追思弔唁 (D)</button>
     </div>
 
-    <!-- 圖片網格 -->
-    <div id="gallery" class="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
+    <!-- 水平網格排版（手機 1 排、平板 2 排、一般螢幕 3 排、大螢幕 4 排） -->
+    <div id="gallery" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       <div id="loading" class="text-stone-400 py-12 text-center col-span-full">載入作品中...</div>
     </div>
   </main>
@@ -54,7 +54,6 @@
   <script>
     const CLOUD_NAME = "mridz5af";
     
-    // 定義各分類及其專屬代號前綴
     const CATEGORY_CONFIG = [
       { name: '開幕誌慶', prefix: 'A' },
       { name: '升遷榮調', prefix: 'B' },
@@ -75,13 +74,13 @@
             .then(res => res.ok ? res.json() : { resources: [] })
             .then(data => {
               const resources = data.resources || [];
-              // 依上傳時間排序（由舊到新，保證編號固定遞增）
+              // 依上傳時間由舊到新排序，確保編號固定且水平遞增
               resources.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
               
               return resources.map((item, idx) => ({
                 ...item,
                 categoryName: cat.name,
-                code: `${cat.prefix}${String(idx + 1).padStart(3, '0')}` // 例如 A001, B002
+                code: `${cat.prefix}${String(idx + 1).padStart(3, '0')}`
               }));
             })
             .catch(() => [])
@@ -114,10 +113,10 @@
         const lineMsg = encodeURIComponent(`您好，我想詢問【${item.categoryName}】編號 ${item.code} 這款蘭花花禮：\n${imgUrl}`);
 
         const card = document.createElement('div');
-        card.className = "break-inside-avoid bg-white rounded-2xl overflow-hidden shadow-sm border border-stone-200 hover:shadow-md transition duration-300 flex flex-col mb-4";
+        card.className = "bg-white rounded-2xl overflow-hidden shadow-sm border border-stone-200 hover:shadow-md transition duration-300 flex flex-col";
         card.innerHTML = `
-          <div class="relative bg-stone-100 aspect-auto">
-            <img src="${imgUrl}" alt="作品 ${item.code}" loading="lazy" class="w-full h-auto object-cover block">
+          <div class="relative bg-stone-100 aspect-square overflow-hidden">
+            <img src="${imgUrl}" alt="作品 ${item.code}" loading="lazy" class="w-full h-full object-cover block">
             <span class="absolute top-3 left-3 bg-stone-900/85 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-md tracking-wider">
               編號 ${item.code}
             </span>
