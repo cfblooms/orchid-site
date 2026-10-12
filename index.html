@@ -13,7 +13,7 @@
     <div class="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       <div>
         <h1 class="text-2xl font-bold tracking-tight text-stone-900">蘭花精選盆栽目錄</h1>
-        <p class="text-xs text-stone-500 mt-0.5">記下作品編號，即可直接撥打電話或透過 LINE 洽詢訂購</p>
+        <p class="text-xs text-stone-500 mt-0.5">點擊圖片可放大觀看，記下作品編號即可致電或加 LINE 洽詢訂購</p>
       </div>
       <!-- 快速聯絡按鈕 -->
       <div class="flex gap-2">
@@ -38,11 +38,34 @@
       <button onclick="filterCategory('追思弔唁')" class="cat-btn px-4 py-1.5 rounded-full text-sm font-medium bg-white text-stone-600 border border-stone-300 hover:bg-stone-100 transition">追思弔唁 (D)</button>
     </div>
 
-    <!-- 水平網格排版（手機 1 排、平板 2 排、一般螢幕 3 排、大螢幕 4 排） -->
+    <!-- 水平網格排版 -->
     <div id="gallery" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       <div id="loading" class="text-stone-400 py-12 text-center col-span-full">載入作品中...</div>
     </div>
   </main>
+
+  <!-- 圖片點擊放大彈窗 (Lightbox) -->
+  <div id="lightbox" onclick="closeLightbox(event)" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm hidden flex-col items-center justify-center p-4">
+    <!-- 關閉按鈕 -->
+    <button onclick="closeLightboxDirect()" class="absolute top-4 right-4 text-white text-3xl font-light hover:text-stone-300 p-2 z-10">&times;</button>
+    
+    <!-- 圖片主體 -->
+    <div class="relative max-w-4xl max-h-[85vh] flex flex-col items-center">
+      <img id="lightbox-img" src="" alt="放大預覽" class="max-h-[75vh] w-auto max-w-full object-contain rounded-lg shadow-2xl">
+      <!-- 底部編號與聯絡列 -->
+      <div id="lightbox-caption" class="mt-4 flex items-center justify-between w-full text-white text-sm px-2">
+        <span id="lightbox-code" class="font-bold text-base"></span>
+        <div class="flex gap-2">
+          <a id="lightbox-line" href="#" target="_blank" class="bg-[#06C755] text-white text-xs px-3 py-1.5 rounded-full font-medium hover:opacity-90 transition">
+            💬 LINE 洽詢
+          </a>
+          <a href="tel:0958-179-725" class="bg-emerald-700 text-white text-xs px-3 py-1.5 rounded-full font-medium hover:bg-emerald-800 transition">
+            📞 打電話
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- 手機版右下角浮動撥號鈕 -->
   <div class="fixed bottom-6 right-6 z-40 sm:hidden flex flex-col gap-3">
@@ -74,7 +97,6 @@
             .then(res => res.ok ? res.json() : { resources: [] })
             .then(data => {
               const resources = data.resources || [];
-              // 依上傳時間由舊到新排序，確保編號固定且水平遞增
               resources.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
               
               return resources.map((item, idx) => ({
@@ -109,17 +131,23 @@
       }
 
       filtered.forEach(item => {
-        const imgUrl = `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto,w_800/v${item.version}/${item.public_id}.${item.format}`;
-        const lineMsg = encodeURIComponent(`您好，我想詢問【${item.categoryName}】編號 ${item.code} 這款蘭花花禮：\n${imgUrl}`);
+        const thumbUrl = `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto,w_800/v${item.version}/${item.public_id}.${item.format}`;
+        const fullUrl = `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto,w_1600/v${item.version}/${item.public_id}.${item.format}`;
+        const lineMsg = encodeURIComponent(`您好，我想詢問【${item.categoryName}】編號 ${item.code} 這款蘭花花禮：\n${fullUrl}`);
+        const lineLink = `https://lin.ee/SwQOPJk?text=${lineMsg}`;
 
         const card = document.createElement('div');
         card.className = "bg-white rounded-2xl overflow-hidden shadow-sm border border-stone-200 hover:shadow-md transition duration-300 flex flex-col";
         card.innerHTML = `
-          <div class="relative bg-stone-100 aspect-square overflow-hidden">
-            <img src="${imgUrl}" alt="作品 ${item.code}" loading="lazy" class="w-full h-full object-cover block">
+          <!-- 點擊圖片觸發放大 -->
+          <div onclick="openLightbox('${fullUrl}', '${item.categoryName}', '${item.code}', '${lineLink}')" class="relative bg-stone-100 aspect-square overflow-hidden cursor-zoom-in group">
+            <img src="${thumbUrl}" alt="作品 ${item.code}" loading="lazy" class="w-full h-full object-cover block group-hover:scale-105 transition duration-500">
             <span class="absolute top-3 left-3 bg-stone-900/85 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-md tracking-wider">
               編號 ${item.code}
             </span>
+            <div class="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-sm font-medium">
+              🔍 點擊看大圖
+            </div>
           </div>
           <div class="p-4 flex flex-col justify-between flex-grow">
             <div class="mb-3">
@@ -132,7 +160,7 @@
               <a href="tel:0958-179-725" class="text-center py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold transition">
                 📞 撥打電話
               </a>
-              <a href="https://lin.ee/SwQOPJk?text=${lineMsg}" target="_blank" class="text-center py-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition">
+              <a href="${lineLink}" target="_blank" class="text-center py-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition">
                 💬 LINE 訂購
               </a>
             </div>
@@ -141,6 +169,31 @@
         container.appendChild(card);
       });
     }
+
+    // 燈箱控制函式
+    function openLightbox(url, category, code, lineLink) {
+      document.getElementById('lightbox-img').src = url;
+      document.getElementById('lightbox-code').innerText = `【${category}】作品編號：${code}`;
+      document.getElementById('lightbox-line').href = lineLink;
+      document.getElementById('lightbox').classList.remove('hidden');
+      document.getElementById('lightbox').classList.add('flex');
+    }
+
+    function closeLightbox(event) {
+      if (event.target.id === 'lightbox') {
+        closeLightboxDirect();
+      }
+    }
+
+    function closeLightboxDirect() {
+      document.getElementById('lightbox').classList.add('hidden');
+      document.getElementById('lightbox').classList.remove('flex');
+    }
+
+    // 按鍵盤 ESC 也可關閉
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeLightboxDirect();
+    });
 
     function filterCategory(cat) {
       currentFilter = cat;
